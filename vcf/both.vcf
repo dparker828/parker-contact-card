@@ -1,0 +1,24 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Parker;Dustin;;;
+FN:Dustin Parker
+ORG:The Parker Group
+TITLE:Real Estate Agent | Founder
+TEL;TYPE=CELL,VOICE:+13022285204
+TEL;TYPE=WORK,VOICE:+13022176692
+EMAIL;TYPE=WORK:dustin@theparkergroup.com
+URL:https://theparkergroup.com
+NOTE:Free Home Intelligence Report anytime — just text. https://theparkergroup.com
+END:VCARD
+BEGIN:VCARD
+VERSION:3.0
+N:Parker;Rachel;;;
+FN:Rachel Parker
+ORG:The Parker Group
+TITLE:Real Estate Agent | Founder
+TEL;TYPE=CELL,VOICE:+14103100816
+TEL;TYPE=WORK,VOICE:+13022176692
+EMAIL;TYPE=WORK:rachel@theparkergroup.com
+URL:https://theparkergroup.com
+NOTE:Free Home Intelligence Report anytime — just text. https://theparkergroup.com
+END:VCARD
