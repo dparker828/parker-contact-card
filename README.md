@@ -20,6 +20,11 @@ and Vercel provides it automatically.
   flow far more reliably than a browser-generated download, especially on iOS.
 - **`scripts/gen-vcf.mjs`** — regenerates the three vCards from `index.html`.
 - **`vercel.json`** — serves `/vcf/*` as `text/vcard; charset=utf-8` so iOS opens Contacts cleanly.
+- **`og.jpg`** — 1200×630 social share image (the hero photo, cover-cropped). Used by the
+  Open Graph / Twitter tags so a shared link unfurls with a rich preview.
+- **`favicon.ico`, `icon-32.png`, `icon-16.png`, `apple-touch-icon.png`** — browser-tab and
+  home-screen icons: the white house mark on brand navy.
+- **`scripts/gen-assets.py`** — regenerates `og.jpg` + the icons from `index.html` (Pillow).
 
 ## The CONFIG block — edit here, nothing else
 
@@ -67,6 +72,21 @@ const CONFIG = {
 Point any QR code at the root URL above — no path, no parameters. (The card reads an optional
 `?ref=` parameter only to personalize the greeting when someone opens a *shared* link; it is
 not required and stores nothing.)
+
+## Social share image & favicon
+
+When someone uses "Pass it on," the link unfurls with a rich preview (hero photo, title,
+description) via the Open Graph / Twitter tags in `<head>`. The browser tab and "Add to Home
+Screen" use the house-mark favicon. To regenerate after changing the hero photo or logo:
+
+```bash
+pip install pillow            # once (add --break-system-packages if your env requires it)
+python3 scripts/gen-assets.py
+```
+
+The Open Graph tags use **absolute URLs** (`https://parker-contact-card.vercel.app/og.jpg`
+and `og:url`). If you move to a custom domain (e.g. `card.theparkergroup.com`), update those
+absolute URLs and the `<link rel="canonical">` in `index.html` to the new domain.
 
 ## By design: no backend, no lead capture
 
