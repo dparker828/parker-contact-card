@@ -13,9 +13,8 @@ and Vercel provides it automatically.
 
 ## What's in here
 
-- **`index.html`** — the entire card (inline CSS + JS). Its design and copy are final/approved.
-  The hero photo and logos load as separate, **same-origin** image files (below) so the HTML is
-  tiny (~13 KB compressed) and the card paints almost instantly on a cold scan. Fonts via Google Fonts.
+- **`index.html`** — the entire card. Self-contained: inline CSS, inline JS, base64 images,
+  Google Fonts via CDN. This is the approved artifact; its design and copy are final.
 - **`vcf/dustin.vcf`, `vcf/rachel.vcf`, `vcf/both.vcf`** — the static vCards the
   "Save our contact" sheet links to. Static `.vcf` files open the native Add-to-Contacts
   flow far more reliably than a browser-generated download, especially on iOS.
@@ -25,9 +24,7 @@ and Vercel provides it automatically.
   Open Graph / Twitter tags so a shared link unfurls with a rich preview.
 - **`favicon.ico`, `icon-32.png`, `icon-16.png`, `apple-touch-icon.png`** — browser-tab and
   home-screen icons: the white house mark on brand navy.
-- **`hero.jpg`** — the hero photo (served from `<img src="/hero.jpg">`).
-- **`logo-white.png`, `logo-color.png`** — the header (white) and footer (blue) logos, full-res/lossless.
-- **`scripts/gen-assets.py`** — regenerates `og.jpg` + the favicons from `hero.jpg` / `logo-white.png` (Pillow).
+- **`scripts/gen-assets.py`** — regenerates `og.jpg` + the icons from `index.html` (Pillow).
 
 ## The CONFIG block — edit here, nothing else
 

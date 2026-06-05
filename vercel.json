@@ -7,12 +7,6 @@
         { "key": "Content-Type", "value": "text/vcard; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
-    },
-    {
-      "source": "/(.*)\\.(jpg|jpeg|png|ico|webp|avif)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=2592000" }
-      ]
     }
   ]
 }
