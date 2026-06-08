@@ -6,7 +6,8 @@ client-side — **no backend, no lead capture, no analytics, no tracking.**
 
 ## Live URL
 
-**https://parker-contact-card.vercel.app** ← point your QR code at this root URL.
+**https://contact.theparkergroup.com** ← point your QR code at this root URL.
+(The original `parker-contact-card.vercel.app` address also still works.)
 
 HTTPS is required (the save flow and the "Pass it on" Web Share both need a secure context),
 and Vercel provides it automatically.
@@ -84,7 +85,7 @@ pip install pillow            # once (add --break-system-packages if your env re
 python3 scripts/gen-assets.py
 ```
 
-The Open Graph tags use **absolute URLs** (`https://parker-contact-card.vercel.app/og.jpg`
+The Open Graph tags use **absolute URLs** (`https://contact.theparkergroup.com/og.jpg`
 and `og:url`). If you move to a custom domain (e.g. `card.theparkergroup.com`), update those
 absolute URLs and the `<link rel="canonical">` in `index.html` to the new domain.
 
