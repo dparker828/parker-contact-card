@@ -656,25 +656,44 @@ $("#scrim").addEventListener("click",e=>{if(e.target===$("#scrim"))closeSheet();
 /* ---- toast ---- */
 let tt;function toast(m){$("#toastTxt").textContent=m;const t=$("#toast");t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2600);}
 
-/* ---- HIR estimate with odometer count-up + lead capture ---- */
-function estimate(a){let h=0;for(let i=0;i<a.length;i++)h=(h*31+a.charCodeAt(i))>>>0;
-  const v=Math.round((380000+(h%470000))/5000)*5000;
-  return {v,lo:Math.round(v*.93/5000)*5000,hi:Math.round(v*1.07/5000)*5000};}
-const fmt=n=>"$"+n.toLocaleString();
+/* ---- HIR estimate: real value via /api/estimate (RentCast) + owner email alert ---- */
+const fmt=n=>"$"+Number(n).toLocaleString();
 function countUp(el,to){const dur=900,t0=performance.now();
   function step(t){const p=Math.min((t-t0)/dur,1);const e=1-Math.pow(1-p,3);
     el.textContent=fmt(Math.round(to*e/1000)*1000);if(p<1)requestAnimationFrame(step);else el.textContent=fmt(to);}
   requestAnimationFrame(step);}
 
 let HIR={addr:"",est:0};
-$("#estBtn").addEventListener("click",()=>{const a=$("#addr").value.trim();
+const VDISC_DEFAULT=$(".vdisc").textContent;
+let estimating=false;
+async function runEstimate(){
+  const a=$("#addr").value.trim();
   if(a.length<5){$("#addr").focus();toast("Add a bit more of your address");return;}
-  buzz(15); const {v,lo,hi}=estimate(a);
-  HIR={addr:a,est:v};
+  if(estimating)return; estimating=true; buzz(15);
+  HIR={addr:a,est:0};
+  const btn=$("#estBtn"), label=btn.textContent;
+  btn.textContent="…"; btn.style.opacity=".7";
   $("#vres").classList.add("show");
-  $("#vlo").textContent=fmt(lo); $("#vhi").textContent=fmt(hi);
-  countUp($("#vnum"),v);});
-$("#addr").addEventListener("keydown",e=>{if(e.key==="Enter")$("#estBtn").click();});
+  $("#vnum").style.display=""; $(".vmeta").style.display=""; $(".vdisc").textContent=VDISC_DEFAULT;
+  $("#vnum").textContent="…"; $("#vlo").textContent=""; $("#vhi").textContent="";
+  try{
+    const r=await fetch("/api/estimate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({address:a})});
+    const d=await r.json();
+    if(d&&d.ok&&d.value){
+      HIR.est=d.value;
+      $("#vlo").textContent=fmt(d.low); $("#vhi").textContent=fmt(d.high);
+      countUp($("#vnum"),d.value);
+    } else {
+      $("#vnum").style.display="none"; $(".vmeta").style.display="none";
+      $(".vdisc").textContent="We couldn't auto-price that address — tap below and we'll send your exact figures by hand.";
+    }
+  }catch(e){
+    $("#vnum").style.display="none"; $(".vmeta").style.display="none";
+    $(".vdisc").textContent="Couldn't reach our estimator just now — tap below and we'll text you your exact numbers.";
+  }finally{ btn.textContent=label; btn.style.opacity=""; estimating=false; }
+}
+$("#estBtn").addEventListener("click",runEstimate);
+$("#addr").addEventListener("keydown",e=>{if(e.key==="Enter")runEstimate();});
 
 /* "Text us for your real numbers" — a gift, on their terms (no capture) */
 $("#vcta").addEventListener("click",e=>{ e.preventDefault();
