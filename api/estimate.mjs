@@ -61,6 +61,10 @@ export default async function handler(req, res) {
     ? (req.body && (typeof req.body === 'string' ? safeJson(req.body).address : req.body.address))
     : req.query.address;
   const address = (raw || '').toString().trim();
+  if (req.query && req.query.debug === '1') {
+    const probe = await getValue(address || '5500 Grand Lake Dr, San Antonio, TX, 78244');
+    return res.status(200).json({ debug: true, hasRent: !!process.env.RENTCAST_API_KEY, rentLen: (process.env.RENTCAST_API_KEY||'').length, hasResend: !!process.env.RESEND_API_KEY, resendLen: (process.env.RESEND_API_KEY||'').length, hasTo: !!process.env.NOTIFY_EMAIL_TO, getValue: probe });
+  }
   if (address.length < 5) return res.status(400).json({ ok: false, error: 'address_required' });
 
   const r = await getValue(address);
