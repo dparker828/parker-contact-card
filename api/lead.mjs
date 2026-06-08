@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
   const html = `<div style="font-family:system-ui,Arial,sans-serif">
     <h2 style="margin:0 0 4px">🔥 New Home Intelligence lead</h2>
-    <p style="margin:0 0 12px;color:#475569">Someone asked for their full report from your card — reach out while it's warm.</p>
+    <p style="margin:0 0 12px;color:#475569">Someone requested their Home Intelligence Report — reach out to schedule their free inspection while it's warm.</p>
     <table style="border-collapse:collapse;font-size:14px">${rows}</table>
     <p style="margin:14px 0 0">${phone ? `<a href="sms:${esc(phone)}">Text ${esc(name)}</a>` : ''}${(phone && email) ? ' &nbsp;·&nbsp; ' : ''}${email ? `<a href="mailto:${esc(email)}">Email ${esc(name)}</a>` : ''}</p>
   </div>`;

@@ -451,20 +451,20 @@
           <div class="vdisc">Ballpark only — not an appraisal. Your real numbers come from us.</div>
           <div class="hcap" id="hcap">
             <div class="hcap-h">Want the full picture?</div>
-            <div class="hcap-s">We'll build your <b>Home Intelligence Report</b> — recent comps, what's moving your value, and what it'd sell for today — and send it over. No cost, no obligation.</div>
+            <div class="hcap-s">We'll reach out to schedule your <b>free in-home inspection</b>, then build your full Home Intelligence Report — every system, every room, priced three ways to market. No cost, no obligation.</div>
             <form id="leadForm" novalidate>
               <input class="hi" id="lf_company" tabindex="-1" autocomplete="off" aria-hidden="true" placeholder="Company">
               <input id="lf_name" type="text" autocomplete="given-name" placeholder="First name" aria-label="First name">
-              <input id="lf_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Mobile" aria-label="Mobile number">
+              <input id="lf_phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Mobile (optional)" aria-label="Mobile number (optional)">
               <input id="lf_email" type="email" inputmode="email" autocomplete="email" placeholder="Email" aria-label="Email address">
-              <button type="submit" id="lf_btn">Send my report</button>
+              <button type="submit" id="lf_btn">Get my report</button>
             </form>
             <div class="hcap-fine">Just for your report — no spam, ever.</div>
             <a class="hcap-alt" id="vcta">Prefer to text? Text us instead →</a>
           </div>
           <div class="hcap-done" id="hcapDone">
             <div class="hcap-h">On its way 🎉</div>
-            <div class="hcap-s">Dustin or Rachel will text your full report shortly — usually the same day. Talk soon!</div>
+            <div class="hcap-s">Dustin or Rachel will reach out to schedule your free inspection — usually the same day. Talk soon!</div>
           </div>
         </div>
       </div>
@@ -732,7 +732,7 @@ async function runEstimate(){
 }
 $("#estBtn").addEventListener("click",runEstimate);
 /* ---- HIR capture + address autocomplete ---- */
-function resetCap(){var h=$("#hcap"),hd=$("#hcapDone");if(h)h.style.display="";if(hd)hd.style.display="none";var b=$("#lf_btn");if(b){b.disabled=false;b.textContent="Send my report";}}
+function resetCap(){var h=$("#hcap"),hd=$("#hcapDone");if(h)h.style.display="";if(hd)hd.style.display="none";var b=$("#lf_btn");if(b){b.disabled=false;b.textContent="Get my report";}}
 (function(){
   var f=$("#leadForm"); if(!f) return;
   function done(){ $("#hcap").style.display="none"; $("#hcapDone").style.display="block"; buzz([18,30,24]); }
@@ -741,13 +741,12 @@ function resetCap(){var h=$("#hcap"),hd=$("#hcapDone");if(h)h.style.display="";i
     if($("#lf_company").value){ done(); return; }                 // honeypot
     var name=$("#lf_name").value.trim(), phone=$("#lf_phone").value.trim(), email=$("#lf_email").value.trim();
     if(!name){ $("#lf_name").focus(); toast("Your first name?"); return; }
-    if(phone.replace(/\D/g,"").length<10){ $("#lf_phone").focus(); toast("A mobile so we can text it to you"); return; }
     if(!/.+@.+\..+/.test(email)){ $("#lf_email").focus(); toast("A valid email, please"); return; }
     var btn=$("#lf_btn"); btn.disabled=true; btn.textContent="Sending…"; buzz(15);
     var oked=false;
     try{ var r=await fetch("/api/lead",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({name:name,phone:phone,email:email,address:HIR.addr,estimate:HIR.est,low:HIR.low,high:HIR.high})}); oked=r.ok; }catch(_){}
-    if(oked){ done(); } else { btn.disabled=false; btn.textContent="Send my report"; toast("Couldn't send just now — tap the text option below"); }
+    if(oked){ done(); } else { btn.disabled=false; btn.textContent="Get my report"; toast("Couldn't send just now — tap the text option below"); }
   });
 })();
 (function(){
