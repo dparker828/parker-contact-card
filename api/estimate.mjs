@@ -1,9 +1,13 @@
 // Serverless function (Vercel Node runtime): real home-value estimate + owner notification.
-// Reads keys from environment (set in Vercel project settings) — never hard-coded.
-//   RENTCAST_API_KEY   - RentCast AVM key
-//   RESEND_API_KEY     - Resend email key
-//   NOTIFY_EMAIL_TO    - where lead alerts go (e.g. dustin@theparkergroup.com)
-//   NOTIFY_EMAIL_FROM  - verified sender (default: Resend onboarding sender)
+// Env: RENTCAST_API_KEY, RESEND_API_KEY, NOTIFY_EMAIL_TO, NOTIFY_EMAIL_FROM
+//
+// Confidence gate: RentCast returns a price + range for almost any input (even gibberish),
+// widening its range when unsure. We only SHOW a number to the visitor when the range is
+// reasonably tight (spread <= CONF_MAX_SPREAD); otherwise the card shows the "text us for
+// your exact figure" fallback. Either way the owner is emailed (it's a lead) with the rough
+// estimate + a confidence note. Tune CONF_MAX_SPREAD to show more (higher) or fewer (lower).
+
+const CONF_MAX_SPREAD = 0.60; // (high - low) / price; >0.60 (~±30%) => low confidence => "text us"
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -27,21 +31,28 @@ async function getValue(address) {
     if (!price || price <= 0) return { error: 'no_data' };
     const low = Number(d.priceRangeLow) || Math.round(price * 0.95);
     const high = Number(d.priceRangeHigh) || Math.round(price * 1.05);
-    return { value: price, low, high };
+    const spread = (high - low) / price;
+    return { value: price, low, high, spread, confident: spread <= CONF_MAX_SPREAD };
   } catch (e) {
     return { error: e.name === 'AbortError' ? 'timeout' : 'fetch_error' };
   }
 }
 
-async function notify(address, result) {
+async function notify(address, r) {
   const key = process.env.RESEND_API_KEY;
   const to = process.env.NOTIFY_EMAIL_TO;
   if (!key || !to) return;
   const from = process.env.NOTIFY_EMAIL_FROM || 'Parker Group Card <onboarding@resend.dev>';
   const when = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
-  const valLine = result && result.value
-    ? `Estimated value: $${result.value.toLocaleString()} (range $${result.low.toLocaleString()}–$${result.high.toLocaleString()})`
-    : 'No automated value found for this address — still a lead worth a follow-up.';
+  let valLine;
+  if (r && r.value) {
+    const range = `$${r.low.toLocaleString()}–$${r.high.toLocaleString()}`;
+    valLine = r.confident
+      ? `Estimated value: $${r.value.toLocaleString()} (range ${range}).`
+      : `Estimated value: $${r.value.toLocaleString()} (range ${range}) — LOW CONFIDENCE (±${Math.round(r.spread * 100)}% range), so the visitor was shown the "text us" prompt instead of this number.`;
+  } else {
+    valLine = 'No automated value found for this address — still a lead worth a follow-up.';
+  }
   const html = `<p>Someone just used the home-value tool on your card.</p>
 <p><strong>Address:</strong> ${esc(address)}<br>
 <strong>${esc(valLine)}</strong><br>
@@ -53,7 +64,7 @@ async function notify(address, result) {
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from, to, subject: `🏡 Home value checked: ${address}`, html }),
     }, 6000);
-  } catch (_) { /* notification is best-effort; never fail the request on it */ }
+  } catch (_) { /* notification is best-effort */ }
 }
 
 export default async function handler(req, res) {
@@ -64,10 +75,11 @@ export default async function handler(req, res) {
   if (address.length < 5) return res.status(400).json({ ok: false, error: 'address_required' });
 
   const r = await getValue(address);
-  await notify(address, r.value ? r : null);   // notify on EVERY lookup (it's a lead signal)
+  await notify(address, r); // notify on EVERY lookup — always a lead signal
 
-  if (r.value) return res.status(200).json({ ok: true, value: r.value, low: r.low, high: r.high });
-  return res.status(200).json({ ok: false, noData: true });  // frontend invites a text instead
+  // Show a number only when RentCast is reasonably confident; otherwise invite a text.
+  if (r.value && r.confident) return res.status(200).json({ ok: true, value: r.value, low: r.low, high: r.high });
+  return res.status(200).json({ ok: false, noData: true });
 }
 
 function safeJson(s) { try { return JSON.parse(s); } catch { return {}; } }
