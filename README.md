@@ -1,8 +1,10 @@
 # Parker Group — Digital Contact Card
 
 A single-page digital contact card for Dustin &amp; Rachel Parker (The Parker Group).
-A premium, in-person handoff card: scan a QR, save the contact, text us. It is fully
-client-side — **no backend, no lead capture, no analytics, no tracking.**
+A premium, in-person handoff card: scan a QR, save the contact, text us. It is almost
+entirely client-side — **no lead-capture forms, no analytics, no tracking.** The one
+exception is the optional home-value tool, which calls a single serverless endpoint
+(`/api/estimate`) to fetch a real estimate and email Dustin that someone looked.
 
 ## Live URL
 
@@ -20,6 +22,9 @@ and Vercel provides it automatically.
   "Save our contact" sheet links to. Static `.vcf` files open the native Add-to-Contacts
   flow far more reliably than a browser-generated download, especially on iOS.
 - **`scripts/gen-vcf.mjs`** — regenerates the three vCards from `index.html`.
+- **`api/estimate.mjs`** — the one serverless function. Powers the home-value tool: fetches a
+  real estimate (RentCast AVM) and emails Dustin on every lookup (Resend). Only displays a
+  number when the estimate is reasonably confident; otherwise the card invites a text.
 - **`vercel.json`** — serves `/vcf/*` as `text/vcard; charset=utf-8` so iOS opens Contacts cleanly.
 - **`og.jpg`** — 1200×630 social share image (the hero photo, cover-cropped). Used by the
   Open Graph / Twitter tags so a shared link unfurls with a rich preview.
@@ -89,15 +94,34 @@ The Open Graph tags use **absolute URLs** (`https://contact.theparkergroup.com/o
 and `og:url`). If you move to a custom domain (e.g. `card.theparkergroup.com`), update those
 absolute URLs and the `<link rel="canonical">` in `index.html` to the new domain.
 
-## By design: no backend, no lead capture
+## The home-value tool (the one piece of backend)
 
-This is a contact card, not a funnel. There are no forms, email integrations, analytics,
-databases, or server-side code. Inbound texts are the contact.
+The "What's my home worth?" gadget posts the address to **`/api/estimate`** (a Vercel
+serverless function). That function:
 
-If you ever decide to change that, the one place a capture hook would attach is the
-client-side `save()` function and the concierge / estimate click handlers in `index.html` —
-that is where a `fetch()` to an endpoint of your choosing would go. None of it is built or
-wired today.
+1. Looks up a real automated valuation from **RentCast** (AVM API).
+2. **Emails Dustin on every lookup** via **Resend** — address, rough estimate, timestamp — so
+   each use is a live lead. (Best-effort: a mail hiccup never breaks the tool.)
+3. **Only shows the visitor a number when RentCast is reasonably confident.** RentCast returns
+   a price for almost any input and widens its range when unsure, so the function gates on
+   range width: if `(high − low) / value` exceeds **`CONF_MAX_SPREAD`** (default **0.60**,
+   ~±30%), the card hides the number and shows "tap below and we'll send your exact figures by
+   hand" instead. The owner email still fires, flagged LOW CONFIDENCE. Raise `CONF_MAX_SPREAD`
+   (top of `api/estimate.mjs`) to show more numbers; lower it to be stricter.
+
+There are still **no forms, no databases, no analytics, and no tracking** — inbound texts and
+the lead email are the only signals.
+
+### Environment variables (Vercel → Project → Settings → Environment Variables)
+
+| Name | What it is |
+| --- | --- |
+| `RENTCAST_API_KEY` | RentCast API key (the valuation source). |
+| `RESEND_API_KEY` | Resend API key (sends the lead-alert email). |
+| `NOTIFY_EMAIL_TO` | Where the alert goes — `dustin@theparkergroup.com`. |
+| `NOTIFY_EMAIL_FROM` | Sender, e.g. `Parker Group Card <onboarding@resend.dev>`. Verify theparkergroup.com in Resend to send from your own domain. |
+
+Keys live only in Vercel (never in the repo); the function reads them from `process.env`.
 
 ## Deploy
 
