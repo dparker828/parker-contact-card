@@ -25,6 +25,10 @@ and Vercel provides it automatically.
 - **`api/estimate.mjs`** — the one serverless function. Powers the home-value tool: fetches a
   real estimate (RentCast AVM) and emails Dustin on every lookup (Resend). Only displays a
   number when the estimate is reasonably confident; otherwise the card invites a text.
+- **`api/places.mjs`** — server-side proxy to Google Places (New) autocomplete; powers the
+  address field's suggestions while keeping the Google key off the client.
+- **`api/lead.mjs`** — receives the Home Intelligence Report form (name, mobile, email) and
+  emails Dustin a lead alert (Resend). Honeypot-guarded; returns ok only if the email sends.
 - **`vercel.json`** — serves `/vcf/*` as `text/vcard; charset=utf-8` so iOS opens Contacts cleanly.
 - **`og.jpg`** — 1200×630 social share image (the hero photo, cover-cropped). Used by the
   Open Graph / Twitter tags so a shared link unfurls with a rich preview.
@@ -112,6 +116,14 @@ serverless function). That function:
 There are still **no forms, no databases, no analytics, and no tracking** — inbound texts and
 the lead email are the only signals.
 
+### Address autocomplete + lead capture
+
+The address field offers Google-powered suggestions (via `/api/places`, key stays server-side).
+After the estimate, a low-pressure invite appears: a visitor can request the full **Home
+Intelligence Report** (name + mobile + email), which posts to `/api/lead` and emails Dustin a
+lead alert. The estimate is never gated — the number shows first, the ask is optional, and a
+"text us instead" link is always offered. A hidden honeypot field drops bot submissions.
+
 ### Environment variables (Vercel → Project → Settings → Environment Variables)
 
 | Name | What it is |
@@ -120,6 +132,7 @@ the lead email are the only signals.
 | `RESEND_API_KEY` | Resend API key (sends the lead-alert email). |
 | `NOTIFY_EMAIL_TO` | Where the alert goes — `dustin@theparkergroup.com`. |
 | `NOTIFY_EMAIL_FROM` | Sender, e.g. `Parker Group Card <onboarding@resend.dev>`. Verify theparkergroup.com in Resend to send from your own domain. |
+| `GOOGLE_PLACES_API_KEY` | Google Cloud key with **Places API (New)** enabled; powers address autocomplete via `/api/places`. Restrict the key to the Places API (New). Optional — the address field still works without it (just no suggestions). |
 
 Keys live only in Vercel (never in the repo); the function reads them from `process.env`.
 
