@@ -803,6 +803,17 @@ $("#vcta").addEventListener("click",e=>{ e.preventDefault();
   });
 })();
 
+/* ---- privacy: every visit starts blank (covers reload + back/forward bfcache restore) ---- */
+window.addEventListener("pageshow",function(){
+  try{
+    var a=$("#addr"); if(a){ a.value=""; }
+    ["#lf_name","#lf_phone","#lf_email","#lf_company"].forEach(function(sel){ var el=$(sel); if(el) el.value=""; });
+    var v=$("#vres"); if(v) v.classList.remove("show");
+    var ac=document.getElementById("acList"); if(ac){ ac.classList.remove("show"); ac.innerHTML=""; }
+    if(typeof resetCap==="function") resetCap();
+  }catch(e){}
+});
+
 /* ---- scroll reveal ---- */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.12,rootMargin:"0px 0px -40px 0px"});
 $$(".reveal").forEach(s=>io.observe(s));
